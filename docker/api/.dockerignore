@@ -1,0 +1,53 @@
+# Archivos a excluir de la imagen Docker
+# Reducen el tamaño del contexto de build y evitan copiar datos sensibles
+
+# Entorno virtual local
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Tests y cobertura
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Variables de entorno sensibles (se pasan vía --env-file en runtime)
+.env
+.env.*
+!.env.example
+
+# Storage local (se monta como volumen)
+storage/
+
+# Documentación y archivos legacy
+*.md
+Roadmap.md
+corefacturalo/
+
+# Docker (no incluir dentro de la imagen)
+docker/
+docker-compose*.yml
+
+# OS
+.DS_Store
+Thumbs.db

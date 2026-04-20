@@ -1,0 +1,67 @@
+# Python byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Testing and coverage
+.pytest_cache/
+coverage.xml
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Logs, local DBs and runtime files
+*.log
+*.sqlite3
+instance/
+*.pid
+gunicorn.sock
+gunicorn.pid
+
+# Environment files
+.env
+.env.*.local
+
+# FastAPI / Uvicorn specific
+# Ignorar logs temporales y archivos de reload de desarrollo
+uvicorn.*.log
+reload/
+
+# Certificates and keys (do not commit private keys)
+*.pem
+*.key
+certs/
+certificate/
+
+# Docker / local override
+docker-compose.override.yml
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node
+node_modules/
+

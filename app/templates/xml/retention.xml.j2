@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+{#
+  Plantilla UBL 2.0 Retención (20) SUNAT Perú
+  Fiel traducción de retention.blade.php de CoreFacturalo.
+
+  Variables específicas:
+    document.series / document.number
+    document.date_of_issue / document.currency_type_id
+    document.retention_type_id      → código de régimen (01 o 02)
+    document.retention_percentage   → porcentaje de retención
+    document.note                   → observación opcional
+    document.total_retention        → total retenido PEN
+    document.total_amount           → total facturado pagado PEN
+    document.supplier               → proveedor
+      {number, identity_document_type_id, name, address, country_id}
+    document.documents              → documentos relacionados:
+      {series, number, document_type_id, date_of_issue, total_amount,
+       currency_type_id, total_retention, date_of_retention,
+       net_total, exchange_rate_info: {exchange_amount, exchange_date}}
+      payments: [{date, amount}]
+#}
+<Retention
+    xmlns="urn:sunat:names:specification:ubl:peru:schema:xsd:Retention-1"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+    xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ext:UBLExtensions>
+        <ext:UBLExtension>
+            <ext:ExtensionContent/>
+        </ext:UBLExtension>
+    </ext:UBLExtensions>
+    <cbc:UBLVersionID>2.0</cbc:UBLVersionID>
+    <cbc:CustomizationID>1.0</cbc:CustomizationID>
+    <cac:Signature>
+        <cbc:ID>{{ company.signature_uri or 'IDFirma' }}</cbc:ID>
+        <cbc:Note>{{ company.signature_note or 'Empresa emisora' }}</cbc:Note>
+        <cac:SignatoryParty>
+            <cac:PartyIdentification>
+                <cbc:ID>{{ company.legal_number }}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name><![CDATA[{{ company.trade_name }}]]></cbc:Name>
+            </cac:PartyName>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment>
+            <cac:ExternalReference>
+                <cbc:URI>#{{ company.signature_uri or 'IDFirma' }}</cbc:URI>
+            </cac:ExternalReference>
+        </cac:DigitalSignatureAttachment>
+    </cac:Signature>
+    <cbc:ID>{{ document.series }}-{{ document.number }}</cbc:ID>
+    <cbc:IssueDate>{{ document.date_of_issue }}</cbc:IssueDate>
+    <cbc:DocumentCurrencyCode>{{ document.currency_type_id }}</cbc:DocumentCurrencyCode>
+    <sac:SUNATRetentionSystemCode>{{ document.retention_type_id }}</sac:SUNATRetentionSystemCode>
+    <sac:SUNATRetentionPercent>{{ document.retention_percentage }}</sac:SUNATRetentionPercent>
+    {% if document.note %}
+    <cbc:Note>{{ document.note }}</cbc:Note>
+    {% endif %}
+    <cbc:TotalInvoiceAmount currencyID="PEN">{{ document.total_amount }}</cbc:TotalInvoiceAmount>
+    <sac:SUNATTotalPaid currencyID="PEN">{{ document.total_retention }}</sac:SUNATTotalPaid>
+    <cac:AgentParty>
+        <cac:PartyIdentification>
+            <cbc:ID schemeID="6">{{ company.legal_number }}</cbc:ID>
+        </cac:PartyIdentification>
+        <cac:PartyName>
+            <cbc:Name><![CDATA[{{ company.trade_name }}]]></cbc:Name>
+        </cac:PartyName>
+        <cac:PostalAddress>
+            <cbc:ID>{{ document.establishment.district_id }}</cbc:ID>
+            <cbc:StreetName><![CDATA[{{ document.establishment.address }}]]></cbc:StreetName>
+            <cbc:CitySubdivisionName>{{ document.establishment.urbanization or '-' }}</cbc:CitySubdivisionName>
+            <cbc:CityName>{{ document.establishment.province }}</cbc:CityName>
+            <cbc:CountrySubentity>{{ document.establishment.department }}</cbc:CountrySubentity>
+            <cbc:District>{{ document.establishment.district }}</cbc:District>
+            <cac:Country>
+                <cbc:IdentificationCode>{{ document.establishment.country_id or 'PE' }}</cbc:IdentificationCode>
+            </cac:Country>
+        </cac:PostalAddress>
+            <cac:PartyLegalEntity>
+            <cbc:RegistrationName><![CDATA[{{ company.legal_name }}]]></cbc:RegistrationName>
+        </cac:PartyLegalEntity>
+    </cac:AgentParty>
+    <cac:ReceiverParty>
+        <cac:PartyIdentification>
+            <cbc:ID schemeID="{{ document.supplier.identity_document_type_id }}">{{ document.supplier.number }}</cbc:ID>
+        </cac:PartyIdentification>
+        <cac:PartyLegalEntity>
+            <cbc:RegistrationName><![CDATA[{{ document.supplier.name }}]]></cbc:RegistrationName>
+        </cac:PartyLegalEntity>
+    </cac:ReceiverParty>
+    {% for doc in document.documents %}
+    <sac:SUNATRetentionDocumentReference>
+        <cbc:ID schemeID="{{ doc.document_type_id }}">{{ doc.series }}-{{ doc.number }}</cbc:ID>
+        <cbc:IssueDate>{{ doc.date_of_issue }}</cbc:IssueDate>
+        <cbc:TotalInvoiceAmount currencyID="{{ doc.currency_type_id }}">{{ doc.total_amount }}</cbc:TotalInvoiceAmount>
+        {% for pago in doc.payments or [] %}
+        <cac:Payment>
+            <cbc:ID>{{ loop.index }}</cbc:ID>
+            <cbc:PaidAmount currencyID="{{ doc.currency_type_id }}">{{ pago.amount }}</cbc:PaidAmount>
+            <cbc:InstructionID>01</cbc:InstructionID>
+            <cbc:PaidDate>{{ pago.date }}</cbc:PaidDate>
+        </cac:Payment>
+        {% endfor %}
+        <sac:SUNATRetentionInformation>
+            <sac:SUNATRetentionAmount currencyID="PEN">{{ doc.total_retention }}</sac:SUNATRetentionAmount>
+            <sac:SUNATRetentionDate>{{ doc.date_of_retention }}</sac:SUNATRetentionDate>
+            <sac:SUNATNetTotalPaid currencyID="PEN">{{ doc.net_total }}</sac:SUNATNetTotalPaid>
+            {% if doc.exchange_rate_info %}
+            <cac:ExchangeRate>
+                <cbc:SourceCurrencyCode>{{ doc.currency_type_id }}</cbc:SourceCurrencyCode>
+                <cbc:TargetCurrencyCode>PEN</cbc:TargetCurrencyCode>
+                <cbc:CalculationRate>{{ doc.exchange_rate_info.exchange_amount }}</cbc:CalculationRate>
+                <cbc:Date>{{ doc.exchange_rate_info.exchange_date }}</cbc:Date>
+            </cac:ExchangeRate>
+            {% endif %}
+        </sac:SUNATRetentionInformation>
+    </sac:SUNATRetentionDocumentReference>
+    {% endfor %}
+</Retention>

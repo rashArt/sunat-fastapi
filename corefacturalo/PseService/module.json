@@ -1,0 +1,11 @@
+{
+    "name": "PseService",
+    "alias": "pseservice",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PseService\\Providers\\PseServiceServiceProvider"
+    ],
+    "files": []
+}

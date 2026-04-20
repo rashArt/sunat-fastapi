@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+{#
+  Plantilla UBL 2.1 Nota de Débito (SUNAT Perú)
+  Fiel traducción de debit.blade.php de CoreFacturalo.
+#}
+<DebitNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2"
+           xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+           xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+           xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+           xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <ext:UBLExtensions>
+        <ext:UBLExtension>
+            <ext:ExtensionContent/>
+        </ext:UBLExtension>
+    </ext:UBLExtensions>
+    <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+    <cbc:CustomizationID>2.0</cbc:CustomizationID>
+    <cbc:ID>{{ document.series }}-{{ document.number }}</cbc:ID>
+    <cbc:IssueDate>{{ document.date_of_issue }}</cbc:IssueDate>
+    <cbc:IssueTime>{{ document.time_of_issue }}</cbc:IssueTime>
+    {% for leg in document.legends or [] %}
+    <cbc:Note languageLocaleID="{{ leg.code }}"><![CDATA[{{ leg.value }}]]></cbc:Note>
+    {% endfor %}
+    <cbc:DocumentCurrencyCode>{{ document.currency_type_id }}</cbc:DocumentCurrencyCode>
+    <cac:DiscrepancyResponse>
+        <cbc:ReferenceID>{{ document.note.affected_series }}-{{ document.note.affected_number }}</cbc:ReferenceID>
+        <cbc:ResponseCode>{{ document.note.note_debit_type_id }}</cbc:ResponseCode>
+        <cbc:Description>{{ document.note.note_description }}</cbc:Description>
+    </cac:DiscrepancyResponse>
+    {% if document.purchase_order %}
+    <cac:OrderReference>
+        <cbc:ID>{{ document.purchase_order }}</cbc:ID>
+    </cac:OrderReference>
+    {% endif %}
+    <cac:BillingReference>
+        <cac:InvoiceDocumentReference>
+            <cbc:ID>{{ document.note.affected_series }}-{{ document.note.affected_number }}</cbc:ID>
+            <cbc:DocumentTypeCode>{{ document.note.affected_document_type_id }}</cbc:DocumentTypeCode>
+        </cac:InvoiceDocumentReference>
+    </cac:BillingReference>
+    {% for guide in document.guides or [] %}
+    <cac:DespatchDocumentReference>
+        <cbc:ID>{{ guide.number }}</cbc:ID>
+        <cbc:DocumentTypeCode>{{ guide.document_type_id }}</cbc:DocumentTypeCode>
+    </cac:DespatchDocumentReference>
+    {% endfor %}
+    {% for rel in document.related or [] %}
+    <cac:AdditionalDocumentReference>
+        <cbc:ID>{{ rel.number }}</cbc:ID>
+        <cbc:DocumentTypeCode>{{ rel.document_type_id }}</cbc:DocumentTypeCode>
+    </cac:AdditionalDocumentReference>
+    {% endfor %}
+    <cac:Signature>
+        <cbc:ID>{{ company.signature_uri or 'IDFirma' }}</cbc:ID>
+        <cbc:Note>{{ company.signature_note or 'Empresa emisora' }}</cbc:Note>
+        <cac:SignatoryParty>
+            <cac:PartyIdentification>
+                <cbc:ID>{{ company.legal_number }}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name><![CDATA[{{ company.trade_name }}]]></cbc:Name>
+            </cac:PartyName>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment>
+            <cac:ExternalReference>
+                <cbc:URI>#{{ company.signature_uri or 'IDFirma' }}</cbc:URI>
+            </cac:ExternalReference>
+        </cac:DigitalSignatureAttachment>
+    </cac:Signature>
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeID="6">{{ company.legal_number }}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name><![CDATA[{{ company.trade_name }}]]></cbc:Name>
+            </cac:PartyName>
+                <cac:PartyLegalEntity>
+                <cbc:RegistrationName><![CDATA[{{ company.legal_name }}]]></cbc:RegistrationName>
+                <cac:RegistrationAddress>
+                    <cbc:ID>{{ document.establishment.district_id }}</cbc:ID>
+                    <cbc:AddressTypeCode>{{ document.establishment.code or '0000' }}</cbc:AddressTypeCode>
+                    {% if document.establishment.urbanization %}
+                    <cbc:CitySubdivisionName>{{ document.establishment.urbanization }}</cbc:CitySubdivisionName>
+                    {% endif %}
+                    <cbc:CityName>{{ document.establishment.province }}</cbc:CityName>
+                    <cbc:CountrySubentity>{{ document.establishment.department }}</cbc:CountrySubentity>
+                    <cbc:District>{{ document.establishment.district }}</cbc:District>
+                    <cac:AddressLine>
+                        <cbc:Line><![CDATA[{{ document.establishment.address }}]]></cbc:Line>
+                    </cac:AddressLine>
+                    <cac:Country>
+                        <cbc:IdentificationCode>{{ document.establishment.country_id or 'PE' }}</cbc:IdentificationCode>
+                    </cac:Country>
+                </cac:RegistrationAddress>
+            </cac:PartyLegalEntity>
+            {% if document.establishment.email or document.establishment.telephone %}
+            <cac:Contact>
+                {% if document.establishment.telephone %}
+                <cbc:Telephone>{{ document.establishment.telephone }}</cbc:Telephone>
+                {% endif %}
+                {% if document.establishment.email %}
+                <cbc:ElectronicMail>{{ document.establishment.email }}</cbc:ElectronicMail>
+                {% endif %}
+            </cac:Contact>
+            {% endif %}
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeID="{{ document.customer.identity_document_type_id }}">{{ document.customer.number }}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName><![CDATA[{{ document.customer.name }}]]></cbc:RegistrationName>
+                {% if document.customer.address %}
+                <cac:RegistrationAddress>
+                    {% if document.customer.district_id %}
+                    <cbc:ID>{{ document.customer.district_id }}</cbc:ID>
+                    {% endif %}
+                    <cac:AddressLine>
+                        <cbc:Line><![CDATA[{{ document.customer.address }}]]></cbc:Line>
+                    </cac:AddressLine>
+                    <cac:Country>
+                        <cbc:IdentificationCode>{{ document.customer.country_id or 'PE' }}</cbc:IdentificationCode>
+                    </cac:Country>
+                </cac:RegistrationAddress>
+                {% endif %}
+            </cac:PartyLegalEntity>
+            {% if document.customer.email or document.customer.telephone %}
+            <cac:Contact>
+                {% if document.customer.telephone %}
+                <cbc:Telephone>{{ document.customer.telephone }}</cbc:Telephone>
+                {% endif %}
+                {% if document.customer.email %}
+                <cbc:ElectronicMail>{{ document.customer.email }}</cbc:ElectronicMail>
+                {% endif %}
+            </cac:Contact>
+            {% endif %}
+        </cac:Party>
+    </cac:AccountingCustomerParty>
+    <cac:TaxTotal>
+        <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ document.total_taxes }}</cbc:TaxAmount>
+        {% if document.total_isc | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_base_isc }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ document.total_isc }}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>2000</cbc:ID>
+                    <cbc:Name>ISC</cbc:Name>
+                    <cbc:TaxTypeCode>EXC</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_taxed | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_taxed }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ document.total_igv }}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>1000</cbc:ID>
+                    <cbc:Name>IGV</cbc:Name>
+                    <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_unaffected | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_unaffected }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">0.00</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>9998</cbc:ID>
+                    <cbc:Name>INA</cbc:Name>
+                    <cbc:TaxTypeCode>FRE</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_exonerated | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_exonerated }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">0.00</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>9997</cbc:ID>
+                    <cbc:Name>EXO</cbc:Name>
+                    <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_free | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_free }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">0.00</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>9996</cbc:ID>
+                    <cbc:Name>GRA</cbc:Name>
+                    <cbc:TaxTypeCode>FRE</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_exportation | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_exportation }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">0.00</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>9995</cbc:ID>
+                    <cbc:Name>EXP</cbc:Name>
+                    <cbc:TaxTypeCode>FRE</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_other_taxes | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ document.total_other_taxes }}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ document.total_base_other_taxes }}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>9999</cbc:ID>
+                    <cbc:Name>OTROS</cbc:Name>
+                    <cbc:TaxTypeCode>OTH</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+        {% if document.total_plastic_bag_taxes | float > 0 %}
+        <cac:TaxSubtotal>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ document.total_plastic_bag_taxes }}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cac:TaxScheme>
+                    <cbc:ID>7152</cbc:ID>
+                    <cbc:Name>ICBPER</cbc:Name>
+                    <cbc:TaxTypeCode>OTH</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        {% endif %}
+    </cac:TaxTotal>
+    <cac:RequestedMonetaryTotal>
+        <cbc:TaxInclusiveAmount currencyID="{{ document.currency_type_id }}">{{ document.total }}</cbc:TaxInclusiveAmount>
+        {% if document.total_charge | float > 0 %}
+        <cbc:ChargeTotalAmount currencyID="{{ document.currency_type_id }}">{{ document.total_charge }}</cbc:ChargeTotalAmount>
+        {% endif %}
+        <cbc:PayableAmount currencyID="{{ document.currency_type_id }}">{{ document.total }}</cbc:PayableAmount>
+    </cac:RequestedMonetaryTotal>
+    {% for row in document['items'] %}
+    <cac:DebitNoteLine>
+        <cbc:ID>{{ loop.index }}</cbc:ID>
+        <cbc:DebitedQuantity unitCode="{{ row.unit_type_id }}">{{ row.quantity }}</cbc:DebitedQuantity>
+        <cbc:LineExtensionAmount currencyID="{{ document.currency_type_id }}">{{ row.total_value }}</cbc:LineExtensionAmount>
+        <cac:PricingReference>
+            <cac:AlternativeConditionPrice>
+                <cbc:PriceAmount currencyID="{{ document.currency_type_id }}">{{ row.unit_price }}</cbc:PriceAmount>
+                <cbc:PriceTypeCode>{{ row.price_type_id }}</cbc:PriceTypeCode>
+            </cac:AlternativeConditionPrice>
+        </cac:PricingReference>
+        <cac:TaxTotal>
+            <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ row.total_taxes }}</cbc:TaxAmount>
+            {% if row.total_isc | float > 0 %}
+            <cac:TaxSubtotal>
+                <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ row.total_base_isc }}</cbc:TaxableAmount>
+                <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ row.total_isc }}</cbc:TaxAmount>
+                <cac:TaxCategory>
+                    <cbc:Percent>{{ row.percentage_isc }}</cbc:Percent>
+                    <cbc:TierRange>{{ row.system_isc_type_id }}</cbc:TierRange>
+                    <cac:TaxScheme>
+                        <cbc:ID>2000</cbc:ID>
+                        <cbc:Name>ISC</cbc:Name>
+                        <cbc:TaxTypeCode>EXC</cbc:TaxTypeCode>
+                    </cac:TaxScheme>
+                </cac:TaxCategory>
+            </cac:TaxSubtotal>
+            {% endif %}
+            <cac:TaxSubtotal>
+                <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ row.total_base_igv }}</cbc:TaxableAmount>
+                <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ row.total_igv }}</cbc:TaxAmount>
+                <cac:TaxCategory>
+                    <cbc:Percent>{{ row.percentage_igv }}</cbc:Percent>
+                    <cbc:TaxExemptionReasonCode>{{ row.affectation_igv_type_id }}</cbc:TaxExemptionReasonCode>
+                    {% set aff = get_affectation_tribute(row.affectation_igv_type_id) %}
+                    <cac:TaxScheme>
+                        <cbc:ID>{{ aff.id }}</cbc:ID>
+                        <cbc:Name>{{ aff.name }}</cbc:Name>
+                        <cbc:TaxTypeCode>{{ aff.code }}</cbc:TaxTypeCode>
+                    </cac:TaxScheme>
+                </cac:TaxCategory>
+            </cac:TaxSubtotal>
+            {% if row.total_other_taxes | float > 0 %}
+            <cac:TaxSubtotal>
+                <cbc:TaxableAmount currencyID="{{ document.currency_type_id }}">{{ row.total_base_other_taxes }}</cbc:TaxableAmount>
+                <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ row.total_other_taxes }}</cbc:TaxAmount>
+                <cac:TaxCategory>
+                    <cbc:Percent>{{ row.percentage_other_taxes }}</cbc:Percent>
+                    <cac:TaxScheme>
+                        <cbc:ID>9999</cbc:ID>
+                        <cbc:Name>OTROS</cbc:Name>
+                        <cbc:TaxTypeCode>OTH</cbc:TaxTypeCode>
+                    </cac:TaxScheme>
+                </cac:TaxCategory>
+            </cac:TaxSubtotal>
+            {% endif %}
+            {% if row.total_plastic_bag_taxes | float > 0 %}
+            <cac:TaxSubtotal>
+                <cbc:TaxAmount currencyID="{{ document.currency_type_id }}">{{ row.total_plastic_bag_taxes }}</cbc:TaxAmount>
+                <cbc:BaseUnitMeasure unitCode="NIU">{{ row.quantity | float | round(0) | int }}</cbc:BaseUnitMeasure>
+                <cac:TaxCategory>
+                    <cbc:PerUnitAmount currencyID="{{ document.currency_type_id }}">{{ row.amount_plastic_bag_taxes }}</cbc:PerUnitAmount>
+                    <cac:TaxScheme>
+                        <cbc:ID>7152</cbc:ID>
+                        <cbc:Name>ICBPER</cbc:Name>
+                        <cbc:TaxTypeCode>OTH</cbc:TaxTypeCode>
+                    </cac:TaxScheme>
+                </cac:TaxCategory>
+            </cac:TaxSubtotal>
+            {% endif %}
+        </cac:TaxTotal>
+        <cac:Item>
+            <cbc:Description><![CDATA[{{ row.description }}]]></cbc:Description>
+            {% if row.internal_id %}
+            <cac:SellersItemIdentification>
+                <cbc:ID>{{ row.internal_id }}</cbc:ID>
+            </cac:SellersItemIdentification>
+            {% endif %}
+            {% if row.item_code %}
+            <cac:CommodityClassification>
+                <cbc:ItemClassificationCode>{{ row.item_code }}</cbc:ItemClassificationCode>
+            </cac:CommodityClassification>
+            {% endif %}
+            {% if row.item_code_gs1 %}
+            <cac:StandardItemIdentification>
+                <cbc:ID>{{ row.item_code_gs1 }}</cbc:ID>
+            </cac:StandardItemIdentification>
+            {% endif %}
+            {% for attr in row.attributes or [] %}
+            <cac:AdditionalItemProperty>
+                <cbc:Name><![CDATA[{{ attr.description }}]]></cbc:Name>
+                <cbc:NameCode>{{ attr.attribute_type_id }}</cbc:NameCode>
+                {% if attr.value %}
+                <cbc:Value>{{ attr.value }}</cbc:Value>
+                {% endif %}
+            </cac:AdditionalItemProperty>
+            {% endfor %}
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="{{ document.currency_type_id }}">{{ row.unit_value }}</cbc:PriceAmount>
+        </cac:Price>
+    </cac:DebitNoteLine>
+    {% endfor %}
+</DebitNote>
+{# Archivo pendiente de implementar en Fase 2 #}

@@ -1,0 +1,94 @@
+@baseUrl = http://host.docker.internal:8000
+@api_token = Xy3E7YcL13JlUkpzodozeWst6mfiyeISS8SjX4QbbsA
+
+### send document invoice
+POST {{baseUrl}}/api/v1/documents
+Content-type: application/json
+X-API-Key: {{api_token}}
+
+{
+    "type": "invoice",
+    "document_type_id": "01",
+    "series": "F001",
+    "number": "00000001",
+    "date_of_issue": "2026-04-01",
+    "time_of_issue": "10:00:00",
+    "establishment": {
+        "address": "AV. VILLA EL SALVADOR NRO. 123",
+        "department": "LIMA",
+        "province": "LIMA",
+        "district": "VILLA EL SALVADOR",
+        "ubigeo": "150142",
+        "country_id": "PE"
+    },
+    "customer": {
+        "identity_document_type_id": "6",
+        "number": "20100070970",
+        "name": "SUPERINTENDENCIA NACIONAL DE ADUANAS Y ADMINISTRACION TRIBUTARIA",
+        "address": "AV. GARCILASO DE LA VEGA NRO. 1472 LIMA - LIMA - LIMA"
+    },
+    "currency_type_id": "PEN",
+    "exchange_rate_sale": "1.00",
+    "payment_condition_id": "01",
+    "invoice": {
+        "operation_type_id": "0101",
+        "date_of_due": "2026-04-30"
+    },
+    "items": [
+        {
+        "description": "PRODUCTO DE PRUEBA SUNAT",
+        "unit_type_id": "NIU",
+        "quantity": "1.00",
+        "unit_value": "100.00",
+        "unit_price": "118.00",
+        "price_type_id": "01",
+        "affectation_igv_type_id": "10",
+        "total_base_igv": "100.00",
+        "percentage_igv": "18.00",
+        "total_igv": "18.00",
+        "total_base_isc": "0.00",
+        "percentage_isc": "0.00",
+        "total_isc": "0.00",
+        "total_base_other_taxes": "0.00",
+        "percentage_other_taxes": "0.00",
+        "total_other_taxes": "0.00",
+        "total_plastic_bag_taxes": "0.00",
+        "total_taxes": "18.00",
+        "total_value": "100.00",
+        "total_charge": "0.00",
+        "total_discount": "0.00",
+        "total": "118.00"
+        }
+    ],
+    "totals": {
+        "total_exportation": "0.00",
+        "total_taxed": "100.00",
+        "total_unaffected": "0.00",
+        "total_exonerated": "0.00",
+        "total_free": "0.00",
+        "total_igv": "18.00",
+        "total_base_isc": "0.00",
+        "total_isc": "0.00",
+        "total_base_other_taxes": "0.00",
+        "total_other_taxes": "0.00",
+        "total_plastic_bag_taxes": "0.00",
+        "total_taxes": "18.00",
+        "total_value": "100.00",
+        "total_discount": "0.00",
+        "total_charge": "0.00",
+        "total_prepayment": "0.00",
+        "total": "118.00"
+    },
+    "legends": [
+        {
+        "code": "1000",
+        "value": "CIENTO DIECIOCHO CON 00/100 SOLES"
+        }
+    ],
+    "actions": {
+        "send_xml_signed": true,
+        "send_email": false,
+        "format_pdf": false,
+        "persist": true
+    }
+}

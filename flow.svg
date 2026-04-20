@@ -1,0 +1,305 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1650" viewBox="0 0 2200 1650">
+  <defs>
+    <style>
+      .title { font: bold 22px Arial, sans-serif; fill: #1f2937; }
+      .subtitle { font: bold 18px Arial, sans-serif; fill: #111827; }
+      .text { font: 14px Arial, sans-serif; fill: #111827; }
+      .small { font: 12px Arial, sans-serif; fill: #111827; }
+      .box { fill: #ffffff; stroke: #374151; stroke-width: 2; rx: 10; ry: 10; }
+      .decision { fill: #fef3c7; stroke: #92400e; stroke-width: 2; }
+      .startend { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 2; }
+      .error { fill: #fee2e2; stroke: #b91c1c; stroke-width: 2; }
+      .success { fill: #dcfce7; stroke: #15803d; stroke-width: 2; }
+      .warning { fill: #fef3c7; stroke: #a16207; stroke-width: 2; }
+      .group { fill: #f8fafc; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 8 6; rx: 18; ry: 18; }
+      .arrow { stroke: #374151; stroke-width: 2.2; fill: none; marker-end: url(#arrowhead); }
+      .label { font: 12px Arial, sans-serif; fill: #374151; font-weight: bold; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <text x="1100" y="35" text-anchor="middle" class="title">Flujo de Registro de Company + Procesamiento de Documentos</text>
+
+  <!-- GROUPS -->
+  <rect x="30" y="60" width="520" height="530" class="group"/>
+  <text x="50" y="90" class="subtitle">Company Registration</text>
+
+  <rect x="600" y="60" width="470" height="430" class="group"/>
+  <text x="620" y="90" class="subtitle">Document Entry</text>
+
+  <rect x="1110" y="60" width="510" height="980" class="group"/>
+  <text x="1130" y="90" class="subtitle">Async Flow</text>
+
+  <rect x="1660" y="60" width="510" height="980" class="group"/>
+  <text x="1680" y="90" class="subtitle">Sync Flow</text>
+
+  <rect x="1110" y="1090" width="1060" height="250" class="group"/>
+  <text x="1130" y="1120" class="subtitle">Partial Success / Storage Mapping</text>
+
+  <!-- COMPANY REGISTRATION -->
+  <rect x="170" y="120" width="240" height="50" rx="25" ry="25" class="startend"/>
+  <text x="290" y="150" text-anchor="middle" class="text">POST /api/v1/companies</text>
+
+  <polygon points="290,210 380,260 290,310 200,260" class="decision"/>
+  <text x="290" y="250" text-anchor="middle" class="small">Validate JSON</text>
+  <text x="290" y="267" text-anchor="middle" class="small">Pydantic</text>
+
+  <rect x="60" y="235" width="120" height="60" class="error"/>
+  <text x="120" y="258" text-anchor="middle" class="small">400 Bad Request</text>
+  <text x="120" y="275" text-anchor="middle" class="small">validation errors</text>
+
+  <rect x="190" y="350" width="200" height="60" class="box"/>
+  <text x="290" y="385" text-anchor="middle" class="text">Decode certificate - base64</text>
+
+  <rect x="30" y="430" width="180" height="60" class="error"/>
+  <text x="120" y="465" text-anchor="middle" class="small">400 Certificate decode error</text>
+
+  <rect x="240" y="430" width="180" height="60" class="box"/>
+  <text x="330" y="465" text-anchor="middle" class="small">Persist certificate to storage</text>
+
+  <rect x="30" y="520" width="160" height="60" class="error"/>
+  <text x="110" y="555" text-anchor="middle" class="small">500 Storage error</text>
+
+  <rect x="230" y="520" width="200" height="60" class="success"/>
+  <text x="330" y="545" text-anchor="middle" class="small">Save / Update company record</text>
+
+  <rect x="230" y="610" width="200" height="50" class="success"/>
+  <text x="330" y="640" text-anchor="middle" class="text">201 Created</text>
+
+  <!-- DOCUMENT ENTRY -->
+  <rect x="710" y="120" width="240" height="50" rx="25" ry="25" class="startend"/>
+  <text x="830" y="150" text-anchor="middle" class="text">POST /api/v1/documents</text>
+
+  <polygon points="830,210 920,260 830,310 740,260" class="decision"/>
+  <text x="830" y="250" text-anchor="middle" class="small">Validate JSON</text>
+  <text x="830" y="267" text-anchor="middle" class="small">Pydantic</text>
+
+  <rect x="620" y="235" width="100" height="60" class="error"/>
+  <text x="670" y="258" text-anchor="middle" class="small">400</text>
+  <text x="670" y="275" text-anchor="middle" class="small">validation</text>
+
+  <rect x="730" y="350" width="200" height="60" class="box"/>
+  <text x="830" y="385" text-anchor="middle" class="small">Fetch company by company_ruc</text>
+
+  <rect x="600" y="430" width="140" height="60" class="error"/>
+  <text x="670" y="465" text-anchor="middle" class="small">404 Company</text>
+  <text x="670" y="480" text-anchor="middle" class="small">not found</text>
+
+  <rect x="760" y="430" width="160" height="70" class="warning"/>
+  <text x="840" y="455" text-anchor="middle" class="small">422 Company</text>
+  <text x="840" y="472" text-anchor="middle" class="small">misconfigured</text>
+  <text x="840" y="489" text-anchor="middle" class="small">missing creds/cert/config</text>
+
+  <polygon points="970,430 1050,470 970,510 890,470" class="decision"/>
+  <text x="970" y="465" text-anchor="middle" class="small">Is async?</text>
+
+  <!-- ASYNC FLOW -->
+  <rect x="1230" y="130" width="280" height="70" class="warning"/>
+  <text x="1370" y="155" text-anchor="middle" class="small">Enqueue job - job_id</text>
+  <text x="1370" y="175" text-anchor="middle" class="small">Return 202 Accepted</text>
+
+  <rect x="1230" y="240" width="280" height="60" class="box"/>
+  <text x="1370" y="275" text-anchor="middle" class="small">Background worker picks job</text>
+
+  <rect x="1230" y="340" width="280" height="60" class="box"/>
+  <text x="1370" y="375" text-anchor="middle" class="small">Generate XML unsigned</text>
+
+  <rect x="1140" y="430" width="170" height="60" class="error"/>
+  <text x="1225" y="465" text-anchor="middle" class="small">Template not found</text>
+
+  <rect x="1330" y="430" width="170" height="60" class="error"/>
+  <text x="1415" y="465" text-anchor="middle" class="small">Template render failure</text>
+
+  <rect x="1230" y="530" width="280" height="60" class="box"/>
+  <text x="1370" y="565" text-anchor="middle" class="small">Sign XML - xmlsec / PSE</text>
+
+  <rect x="1140" y="620" width="170" height="60" class="error"/>
+  <text x="1225" y="655" text-anchor="middle" class="small">Signing failed</text>
+
+  <rect x="1230" y="720" width="280" height="60" class="box"/>
+  <text x="1370" y="745" text-anchor="middle" class="small">Send to SUNAT / OSE / PSE (zeep)</text>
+
+  <rect x="1140" y="810" width="170" height="60" class="error"/>
+  <text x="1225" y="845" text-anchor="middle" class="small">External service error</text>
+
+  <rect x="1330" y="810" width="170" height="60" class="warning"/>
+  <text x="1415" y="835" text-anchor="middle" class="small">Partial success:</text>
+  <text x="1415" y="852" text-anchor="middle" class="small">signed XML + SUNAT error</text>
+
+  <rect x="1230" y="900" width="280" height="60" class="box"/>
+  <text x="1370" y="925" text-anchor="middle" class="small">Parse CDR → derive state</text>
+
+  <rect x="1140" y="980" width="170" height="60" class="error"/>
+  <text x="1225" y="1015" text-anchor="middle" class="small">CDR parse failure</text>
+
+  <rect x="1230" y="1060" width="280" height="60" class="box"/>
+  <text x="1370" y="1095" text-anchor="middle" class="small">Store artifacts &amp; QR</text>
+
+  <rect x="1230" y="1160" width="280" height="80" class="success"/>
+  <text x="1370" y="1190" text-anchor="middle" class="small">Update job status: success/failure</text>
+  <text x="1370" y="1210" text-anchor="middle" class="small">Notify via webhook</text>
+  <text x="1370" y="1230" text-anchor="middle" class="small">or leave for polling</text>
+
+  <!-- SYNC FLOW -->
+  <rect x="1780" y="130" width="280" height="60" class="box"/>
+  <text x="1920" y="165" text-anchor="middle" class="small">Run pipeline inline</text>
+
+  <rect x="1780" y="230" width="280" height="60" class="box"/>
+  <text x="1920" y="265" text-anchor="middle" class="small">Generate XML unsigned - Jinja2</text>
+
+  <rect x="1670" y="320" width="160" height="60" class="warning"/>
+  <text x="1750" y="355" text-anchor="middle" class="small">422 Template not found</text>
+
+  <rect x="1850" y="320" width="160" height="60" class="warning"/>
+  <text x="1930" y="355" text-anchor="middle" class="small">422 Template render error</text>
+
+  <rect x="1780" y="410" width="280" height="60" class="box"/>
+  <text x="1920" y="445" text-anchor="middle" class="small">Sign XML - xmlsec / PSE</text>
+
+  <rect x="1670" y="500" width="160" height="60" class="error"/>
+  <text x="1750" y="535" text-anchor="middle" class="small">500 Signing error</text>
+
+  <rect x="1780" y="590" width="280" height="60" class="box"/>
+  <text x="1920" y="625" text-anchor="middle" class="small">Send to SUNAT / OSE / PSE - zeep</text>
+
+  <rect x="1670" y="680" width="160" height="60" class="error"/>
+  <text x="1750" y="705" text-anchor="middle" class="small">502/503 External error</text>
+
+  <rect x="1850" y="680" width="180" height="70" class="warning"/>
+  <text x="1940" y="705" text-anchor="middle" class="small">200 OK + SUNAT error info</text>
+  <text x="1940" y="723" text-anchor="middle" class="small">(return xml_signed + error)</text>
+
+  <rect x="1780" y="780" width="280" height="60" class="box"/>
+  <text x="1920" y="815" text-anchor="middle" class="small">Parse CDR → state</text>
+
+  <rect x="1670" y="870" width="160" height="60" class="error"/>
+  <text x="1750" y="905" text-anchor="middle" class="small">500 CDR parse error</text>
+
+  <rect x="1780" y="960" width="280" height="60" class="box"/>
+  <text x="1920" y="995" text-anchor="middle" class="small">Store artifacts &amp; QR</text>
+
+  <rect x="1780" y="1060" width="280" height="90" class="success"/>
+  <text x="1920" y="1090" text-anchor="middle" class="small">200 OK with artifacts</text>
+  <text x="1920" y="1110" text-anchor="middle" class="small">xml_unsigned_b64, xml_signed_b64, cdr_b64</text>
+  <text x="1920" y="1130" text-anchor="middle" class="small">hash, qr, state</text>
+
+  <!-- PARTIAL SUCCESS / STORAGE -->
+  <rect x="1180" y="1160" width="250" height="70" class="warning"/>
+  <text x="1305" y="1188" text-anchor="middle" class="small">Return xml_signed</text>
+  <text x="1305" y="1206" text-anchor="middle" class="small">&amp; error code</text>
+  <text x="1305" y="1224" text-anchor="middle" class="small">(partial success)</text>
+
+  <rect x="1470" y="1160" width="300" height="70" class="warning"/>
+  <text x="1620" y="1188" text-anchor="middle" class="small">Return xml_signed, sunat_code,</text>
+  <text x="1620" y="1206" text-anchor="middle" class="small">sunat_description</text>
+
+  <rect x="1810" y="1160" width="160" height="70" class="error"/>
+  <text x="1890" y="1188" text-anchor="middle" class="small">500 Storage error</text>
+  <text x="1890" y="1206" text-anchor="middle" class="small">(async artifacts)</text>
+
+  <rect x="1990" y="1160" width="160" height="70" class="error"/>
+  <text x="2070" y="1188" text-anchor="middle" class="small">500 Storage error</text>
+  <text x="2070" y="1206" text-anchor="middle" class="small">(sync artifacts)</text>
+
+  <!-- ARROWS COMPANY -->
+  <path d="M290 170 L290 210" class="arrow"/>
+  <path d="M200 260 L180 260" class="arrow"/>
+  <text x="185" y="245" class="label">invalid</text>
+  <path d="M290 310 L290 350" class="arrow"/>
+  <text x="315" y="335" class="label">valid</text>
+  <path d="M190 380 L120 430" class="arrow"/>
+  <text x="145" y="405" class="label">decode fail</text>
+  <path d="M330 410 L330 430" class="arrow"/>
+  <text x="345" y="425" class="label">ok</text>
+  <path d="M240 460 L190 520" class="arrow"/>
+  <text x="190" y="495" class="label">storage fail</text>
+  <path d="M330 490 L330 520" class="arrow"/>
+  <text x="345" y="510" class="label">ok</text>
+  <path d="M330 580 L330 610" class="arrow"/>
+
+  <!-- H -> J -->
+  <path d="M430 635 L550 635 L550 145 L710 145" class="arrow"/>
+
+  <!-- DOCUMENT ENTRY -->
+  <path d="M830 170 L830 210" class="arrow"/>
+  <path d="M740 260 L720 260" class="arrow"/>
+  <text x="725" y="245" class="label">invalid</text>
+  <path d="M830 310 L830 350" class="arrow"/>
+  <text x="855" y="335" class="label">valid</text>
+  <path d="M730 380 L670 430" class="arrow"/>
+  <text x="675" y="405" class="label">not found</text>
+  <path d="M830 410 L840 430" class="arrow"/>
+  <text x="855" y="420" class="label">misconfigured</text>
+  <path d="M930 380 L970 430" class="arrow"/>
+  <text x="960" y="405" class="label">ok</text>
+
+  <!-- ASYNC -->
+  <path d="M1050 470 L1230 165" class="arrow"/>
+  <text x="1110" y="360" class="label">yes</text>
+
+  <path d="M1370 200 L1370 240" class="arrow"/>
+  <path d="M1370 300 L1370 340" class="arrow"/>
+  <path d="M1230 370 L1225 430" class="arrow"/>
+  <text x="1180" y="405" class="label">template missing</text>
+  <path d="M1370 400 L1415 430" class="arrow"/>
+  <text x="1425" y="415" class="label">render error</text>
+  <path d="M1370 400 L1370 530" class="arrow"/>
+  <path d="M1230 560 L1225 620" class="arrow"/>
+  <text x="1170" y="595" class="label">signing error</text>
+  <path d="M1370 590 L1370 720" class="arrow"/>
+  <path d="M1230 750 L1225 810" class="arrow"/>
+  <text x="1150" y="785" class="label">network/soap</text>
+  <path d="M1510 750 L1415 810" class="arrow"/>
+  <text x="1460" y="785" class="label">sunat error</text>
+  <path d="M1370 780 L1370 900" class="arrow"/>
+  <path d="M1230 930 L1225 980" class="arrow"/>
+  <text x="1165" y="965" class="label">parse fail</text>
+  <path d="M1370 960 L1370 1060" class="arrow"/>
+  <path d="M1370 1120 L1370 1160" class="arrow"/>
+
+  <!-- SYNC -->
+  <path d="M970 510 L1780 160" class="arrow"/>
+  <text x="1380" y="505" class="label">no</text>
+
+  <path d="M1920 190 L1920 230" class="arrow"/>
+  <path d="M1780 260 L1750 320" class="arrow"/>
+  <text x="1710" y="290" class="label">template missing</text>
+  <path d="M1920 290 L1930 320" class="arrow"/>
+  <text x="1950" y="305" class="label">render error</text>
+  <path d="M1920 290 L1920 410" class="arrow"/>
+  <path d="M1780 440 L1750 500" class="arrow"/>
+  <text x="1700" y="470" class="label">signing error</text>
+  <path d="M1920 470 L1920 590" class="arrow"/>
+  <path d="M1780 620 L1750 680" class="arrow"/>
+  <text x="1695" y="650" class="label">network/soap</text>
+  <path d="M2060 620 L1940 680" class="arrow"/>
+  <text x="1985" y="650" class="label">sunat error</text>
+  <path d="M1920 650 L1920 780" class="arrow"/>
+  <path d="M1780 810 L1750 870" class="arrow"/>
+  <text x="1710" y="840" class="label">parse fail</text>
+  <path d="M1920 840 L1920 960" class="arrow"/>
+  <path d="M1920 1020 L1920 1060" class="arrow"/>
+
+  <!-- PARTIAL SUCCESS MAPPING -->
+  <path d="M1780 440 L1305 1160" class="arrow"/>
+  <text x="1540" y="760" class="label">signed_but_send_failed</text>
+
+  <path d="M1940 750 L1620 1160" class="arrow"/>
+  <text x="1820" y="980" class="label">sunat_error</text>
+
+  <path d="M1370 1120 L1890 1160" class="arrow"/>
+  <text x="1610" y="1135" class="label">store fail</text>
+
+  <path d="M1920 1020 L2070 1160" class="arrow"/>
+  <text x="1990" y="1095" class="label">store fail</text>
+
+  <!-- Error nodes to async final status -->
+  <path d="M1225 490 L1225 1200 L1230 1200" class="arrow"/>
+  <path d="M1415 490 L1415 1200 L1510 1200" class="arrow"/>
+  <path d="M1225 680 L1225 1200" class="arrow"/>
+  <path d="M1225 870 L1225 1200" class="arrow"/>
+  <path d="M1415 870 L1415 1200" class="arrow"/>
+  <path d="M1225 1040 L1225 1200" class="arrow"/>
+</svg>

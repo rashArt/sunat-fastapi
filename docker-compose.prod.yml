@@ -1,0 +1,55 @@
+# =============================================================================
+# docker-compose.prod.yml — overrides de PRODUCCIÓN
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Diferencias respecto a dev:
+#   - Imagen 'production' (usuario no-root, sin mount de código fuente)
+#   - Puertos de postgres y redis NO expuestos al host
+#   - Recursos (CPU/RAM) limitados por contenedor
+#   - restart: always
+# =============================================================================
+
+services:
+
+  api:
+    build:
+      target: production
+    image: sunat-fastapi:latest
+    container_name: sunat_api
+    restart: always
+    # En producción el código está dentro de la imagen — NO montar .:/app
+    volumes:
+      - storage_data:/app/storage
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  postgres:
+    restart: always
+    ports: []                          # no exponer al host en producción
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          memory: 256M
+
+  redis:
+    restart: always
+    ports: []                          # no exponer al host en producción
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          memory: 128M

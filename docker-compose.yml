@@ -1,0 +1,115 @@
+# =============================================================================
+# docker-compose.yml — entorno de DESARROLLO
+#
+# Uso:
+#   docker compose up -d              # levantar todos los servicios
+#   docker compose up -d api          # solo la API
+#   docker compose logs -f api        # ver logs
+#   docker compose exec api bash      # shell en el contenedor
+#   docker compose down -v            # destruir contenedores y volúmenes
+#
+# En producción usar:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # API FastAPI
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      target: development              # cambiar a 'production' en prod
+    image: sunat-fastapi:dev
+    container_name: sunat_api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app                         # hot-reload: el código se monta en vivo
+      - ./storage:/app/storage         # bind mount: comparte storage con el host
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sunat_net
+    # Etiquetas Traefik (activas en producción cuando Traefik está en la red)
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sunat-api.rule=Host(`${TRAEFIK_HOST:-api.sunat.local}`)"
+      - "traefik.http.routers.sunat-api.entrypoints=websecure"
+      - "traefik.http.routers.sunat-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sunat-api.loadbalancer.server.port=8000"
+      - "traefik.http.services.sunat-api.loadbalancer.healthcheck.path=/health"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: sunat_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-sunat}
+      POSTGRES_USER:     ${POSTGRES_USER:-sunat}
+      # POSTGRES_PASSWORD es requerida — no tiene default aquí a propósito
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Debes definir POSTGRES_PASSWORD en .env}
+      PGDATA:            /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"  # expuesto solo en dev; omitir en prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sunat} -d ${POSTGRES_DB:-sunat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - sunat_net
+
+  # ---------------------------------------------------------------------------
+  # Redis 7 (reservado para fase 2: colas de tickets, caché de sesiones)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: sunat_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/etc/redis/redis.conf:ro
+    command: redis-server /etc/redis/redis.conf
+    ports:
+      - "${REDIS_PORT:-6379}:6379"     # expuesto solo en dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - sunat_net
+
+# =============================================================================
+# Volúmenes nombrados (persistencia entre reinicios)
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# =============================================================================
+# Red interna (los contenedores se comunican por nombre de servicio)
+# =============================================================================
+networks:
+  sunat_net:
+    driver: bridge

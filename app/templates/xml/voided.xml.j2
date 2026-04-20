@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+{#
+  Plantilla UBL 2.0 Baja / Anulación (RA) SUNAT Perú
+  Fiel traducción de voided.blade.php de CoreFacturalo.
+
+  Variables específicas:
+    document.identifier        → identificador (ej. RA-20230101-1)
+    document.date_of_reference → fecha de la comunicación de baja
+    document.date_of_issue     → fecha de generación
+    document.documents         → lista de documentos a anular:
+      doc.series / doc.number / doc.document_type_id
+      doc.description          → motivo de la anulación
+#}
+<VoidedDocuments
+    xmlns="urn:sunat:names:specification:ubl:peru:schema:xsd:VoidedDocuments-1"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+    xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ext:UBLExtensions>
+        <ext:UBLExtension>
+            <ext:ExtensionContent/>
+        </ext:UBLExtension>
+    </ext:UBLExtensions>
+    <cbc:UBLVersionID>2.0</cbc:UBLVersionID>
+    <cbc:CustomizationID>1.0</cbc:CustomizationID>
+    <cbc:ID>{{ document.identifier }}</cbc:ID>
+    <cbc:ReferenceDate>{{ document.date_of_reference }}</cbc:ReferenceDate>
+    <cbc:IssueDate>{{ document.date_of_issue }}</cbc:IssueDate>
+    <cac:Signature>
+        <cbc:ID>{{ company.signature_uri or 'IDFirma' }}</cbc:ID>
+        <cbc:Note>{{ company.signature_note or 'Empresa emisora' }}</cbc:Note>
+        <cac:SignatoryParty>
+            <cac:PartyIdentification>
+                <cbc:ID>{{ company.legal_number }}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name><![CDATA[{{ company.trade_name }}]]></cbc:Name>
+            </cac:PartyName>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment>
+            <cac:ExternalReference>
+                <cbc:URI>#{{ company.signature_uri or 'IDFirma' }}</cbc:URI>
+            </cac:ExternalReference>
+        </cac:DigitalSignatureAttachment>
+    </cac:Signature>
+    <cac:AccountingSupplierParty>
+        <cbc:CustomerAssignedAccountID>{{ company.legal_number }}</cbc:CustomerAssignedAccountID>
+        <cbc:AdditionalAccountID>6</cbc:AdditionalAccountID>
+        <cac:Party>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName><![CDATA[{{ company.legal_name }}]]></cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    {% for doc in document.documents %}
+    <sac:VoidedDocumentsLine>
+        <cbc:LineID>{{ loop.index }}</cbc:LineID>
+        <cbc:DocumentTypeCode>{{ doc.document_type_id }}</cbc:DocumentTypeCode>
+        <sac:DocumentSerialID>{{ doc.series }}</sac:DocumentSerialID>
+        <sac:DocumentNumberID>{{ doc.number }}</sac:DocumentNumberID>
+        <sac:VoidReasonDescription>{{ doc.description }}</sac:VoidReasonDescription>
+    </sac:VoidedDocumentsLine>
+    {% endfor %}
+</VoidedDocuments>
+{# Archivo pendiente de implementar en Fase 2 #}

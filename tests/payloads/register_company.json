@@ -1,0 +1,19 @@
+{
+  "_instrucciones": [
+    "Reemplaza <CERT_B64> con el contenido base64 del certificado.",
+    "Genera el base64 en Python:",
+    "  import base64",
+    "  print(base64.b64encode(open('storage/20600000001/certificate/certificate.pem','rb').read()).decode())",
+    "Luego: POST http://localhost:8000/api/v1/companies"
+  ],
+  "legal_number": "20600000001",
+  "legal_name": "EMPRESA DE PRUEBA SAC",
+  "trade_name": "EMPRESA PRUEBA",
+  "sunat_mode": "demo",
+  "soap_send_type": "sunat",
+  "soap_username": "MODDATOS",
+  "soap_password": "moddatos",
+  "certificate_b64": "<CERT_B64>",
+  "certificate_password": null,
+  "send_document_to_pse": false
+}
