@@ -17,7 +17,7 @@ from jinja2 import Environment, FileSystemLoader, Undefined
 logger = logging.getLogger(__name__)
 
 # Directorio de plantillas XML
-_TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates" / "xml"
+_TEMPLATES_DIR = Path(__file__).resolve().parent.parent.parent / "templates" / "xml"
 
 # Entorno Jinja2 con modo estricto para detectar variables no definidas
 _jinja_env = Environment(

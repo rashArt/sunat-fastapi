@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_company_by_api_token
 from app.core.db import get_db
 from app.schemas.document import TicketStatusResponse
-from app.services import document_store
+from app.services.store.document import get_document_by_ticket, update_document_state
 from app.services.sender import build_sunat_sender
 from app.services.storage import StorageService
 
@@ -94,10 +94,10 @@ async def query_ticket(
             logger.warning("No se pudo guardar el CDR del ticket %s: %s", ticket, exc)
 
     # Actualizar estado del documento en BD si existe un registro vinculado al ticket
-    doc_record = document_store.get_document_by_ticket(db, company_id, ticket)
+    doc_record = get_document_by_ticket(db, company_id, ticket)
     if doc_record is not None and state_type_id != "03":
         # Solo actualizar si el ticket ya tiene resolución (no "En proceso")
-        document_store.update_document_state(
+        update_document_state(
             db,
             doc_record.id,
             state_type_id,

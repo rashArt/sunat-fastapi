@@ -10,7 +10,7 @@ from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.services.company_store import get_company_by_token
+from app.services.store.company import get_company_by_token
 
 
 async def get_company_by_api_token(

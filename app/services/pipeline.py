@@ -27,8 +27,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from app.schemas.document import DocumentRequest, PipelineResponse
-from app.services.xml_builder import build_xml
-from app.services.signer import XmlSigner, compute_digest
+from app.services.document import build_xml, XmlSigner, compute_digest, generate_qr
 from app.services.sender import (
     build_sunat_sender,
     build_pse_sender,
@@ -36,8 +35,11 @@ from app.services.sender import (
     SendResult,
 )
 from app.services.storage import StorageService
-from app.services.qr_generator import generate_qr
-from app.services import document_store
+from app.services.store.document import (
+    get_document_by_filename,
+    create_document,
+    update_document_state,
+)
 from app.core.config import settings
 
 try:
@@ -108,7 +110,7 @@ async def run_document_pipeline(
     should_persist = bool(db and doc.actions.persist)
     if should_persist:
         company_id = company_config.get("id")
-        existing = document_store.get_document_by_filename(db, company_id, filename)
+        existing = get_document_by_filename(db, company_id, filename)
         if existing is not None:
             # Documento ya existe: si está en estado terminal, retornar el guardado
             _TERMINAL = {"05", "07", "09"}
@@ -129,13 +131,13 @@ async def run_document_pipeline(
                     document_id=existing.id,
                 )
             # Está en proceso: incrementar intento y continuar
-            document_store.update_document_state(
+            update_document_state(
                 db, existing.id, existing.state_type_id, increment_attempt=True
             )
             document_id = existing.id
         else:
             # Nuevo documento: registrar en BD (estado 01)
-            new_doc = document_store.create_document(db, company_id, doc, filename)
+            new_doc = create_document(db, company_id, doc, filename)
             document_id = new_doc.id
     # ------------------------------------------------------------------
     # 2. Construir contexto para la plantilla Jinja2
@@ -199,7 +201,7 @@ async def run_document_pipeline(
 
     # Actualizar paths en BD
     if should_persist and document_id:
-        document_store.update_document_state(
+        update_document_state(
             db,
             document_id,
             _STATE_REGISTERED,
@@ -222,7 +224,7 @@ async def run_document_pipeline(
 
     # Actualizar hash en BD
     if should_persist and document_id:
-        document_store.update_document_state(
+        update_document_state(
             db,
             document_id,
             _STATE_REGISTERED,
@@ -237,7 +239,7 @@ async def run_document_pipeline(
         state_description = "Generado (sin envío a SUNAT)"
         # Actualizar estado en BD con processed_at
         if should_persist and document_id:
-            document_store.update_document_state(
+            update_document_state(
                 db,
                 document_id,
                 state_type_id,
@@ -260,7 +262,7 @@ async def run_document_pipeline(
 
     # Actualizar estado a "03" antes de enviar
     if should_persist and document_id:
-        document_store.update_document_state(db, document_id, _STATE_SENT)
+        update_document_state(db, document_id, _STATE_SENT)
 
     # Tipo de comprobante de resumen (envío asíncrono con ticket)
     _SUMMARY_TYPES = {"summary", "voided"}
@@ -324,7 +326,7 @@ async def run_document_pipeline(
             state_description = f"Resumen enviado. Ticket: {sunat_code}"
             # Guardar el ticket en BD para poder resolver el estado después
             if should_persist and document_id:
-                document_store.update_document_state(
+                update_document_state(
                     db, document_id, _STATE_SENT, ticket=sunat_code
                 )
         else:
@@ -339,7 +341,7 @@ async def run_document_pipeline(
             # Actualizar estado final en BD
             if should_persist and document_id:
                 cdr_local_path = str(storage.get_path("cdr", filename + ".zip")) if cdr_b64 else None
-                document_store.update_document_state(
+                update_document_state(
                     db,
                     document_id,
                     state_type_id,
@@ -356,7 +358,7 @@ async def run_document_pipeline(
         state_type_id = _STATE_REJECTED
         state_description = "Error de envío"
         if should_persist and document_id:
-            document_store.update_document_state(
+            update_document_state(
                 db, document_id, _STATE_REJECTED,
                 sunat_description=str(exc),
                 mark_processed=True,

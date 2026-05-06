@@ -21,7 +21,7 @@ from app.core.cache import cache_delete, cache_get, cache_set
 from app.core.config import settings
 from app.models.company_model import Company
 from app.schemas.company import CompanyRegisterRequest
-from app.services.signer import XmlSigner
+from app.services.document.signer import XmlSigner
 
 logger = logging.getLogger(__name__)
 
@@ -262,4 +262,3 @@ def get_company(db: Session, legal_number: str) -> Optional[dict]:
     data = _company_to_dict(company)
     cache_set(cache_key, data)
     return data
-

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_company_by_api_token
 from app.core.db import get_db
 from app.schemas.document import DocumentRecord, DocumentRequest, PipelineResponse
-from app.services.document_store import get_document_by_id
+from app.services.store.document import get_document_by_id
 from app.services.pipeline import run_document_pipeline
 
 logger = logging.getLogger(__name__)

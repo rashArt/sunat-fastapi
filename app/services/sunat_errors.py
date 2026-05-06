@@ -9,7 +9,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-_XML_PATH = Path(__file__).parent / "CodeErrors.xml"
+_XML_PATH = Path(__file__).parent.parent / "data" / "CodeErrors.xml"
 _HTTP_ERROR_MESSAGES: dict[int, str] = {
     200: "Operación exitosa",
     400: "Errores de cliente (Bad Request)",

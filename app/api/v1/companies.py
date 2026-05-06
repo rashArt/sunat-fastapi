@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.schemas.company import CompanyRegisterRequest, CompanyResponse
-from app.services.company_store import store_company, get_company
+from app.services.store.company import store_company, get_company
 
 logger = logging.getLogger(__name__)
 
