@@ -65,3 +65,5 @@ desktop.ini
 # Node
 node_modules/
 
+# core legacy for migration
+corefacturalo/
